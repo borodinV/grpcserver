@@ -1,0 +1,8 @@
+port: "50051"
+
+db:
+  username: "admin"
+  dbname: "admin"
+  sslmode: "disable"
+  password: "12345"
+  port: "5432"
