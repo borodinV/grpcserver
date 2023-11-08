@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 	"grpc/client/proto"
-	"io"
 	"log"
 	"os"
 )
@@ -32,6 +32,7 @@ func main() {
 		fmt.Println("Available methods:")
 		fmt.Println("Add book to library - Add")
 		fmt.Println("Get book from library - Get")
+		fmt.Println("Get all book from library - All")
 		fmt.Println("Update info about book - Update")
 		fmt.Println("Delete book from library - Delete")
 		fmt.Println("Search book by name from library - Search")
@@ -105,6 +106,21 @@ func main() {
 				break
 
 			}
+		case "All":
+
+			books, err := client.GetAll(ctx, &wrappers.StringValue{Value: ""})
+			if err != nil {
+				log.Printf("Error on executing method: %v\n", err)
+			}
+
+			fmt.Println("Searching result: ")
+
+			for _, book := range books.Books {
+				fmt.Println(book)
+			}
+
+			break
+
 		case "Update":
 
 			var input proto.Book
@@ -177,25 +193,17 @@ func main() {
 					continue
 				}
 
-				searchSteam, err := client.SearchBookByName(ctx, &searchName)
+				books, err := client.SearchBookByName(ctx, &searchName)
 				if err != nil {
 					log.Printf("Error on executing method: %v\n", err)
 				}
 
 				fmt.Println("Searching result: ")
 
-				for {
-					searchBooks, err := searchSteam.Recv()
-					if err == io.EOF {
-						break
-					}
-					if err != nil {
-						log.Printf("Error on get message stream: %v\n", err)
-						break
-					}
-
-					fmt.Println(searchBooks)
+				for _, book := range books.Books {
+					fmt.Println(book)
 				}
+
 				break
 			}
 		case "Exit":

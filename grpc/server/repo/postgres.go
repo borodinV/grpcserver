@@ -14,10 +14,6 @@ type Config struct {
 	Password string
 }
 
-const (
-	LibraryTable = "library"
-)
-
 func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
 
 	db, err := sqlx.Open("postgres",
