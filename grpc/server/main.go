@@ -38,7 +38,7 @@ func main() {
 	server := NewServer(repository)
 
 	grpcServer := grpc.NewServer()
-	proto.RegisterLibraryServer(grpcServer, server.repo)
+	proto.RegisterLibraryServer(grpcServer, server)
 
 	log.Printf("Starting grpc listener on port: " + viper.GetString("port"))
 

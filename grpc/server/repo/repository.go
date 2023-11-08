@@ -9,7 +9,6 @@ import (
 )
 
 type Repository struct {
-	proto.UnimplementedLibraryServer
 	db *sqlx.DB
 }
 
