@@ -2,10 +2,8 @@ package repo
 
 import (
 	"context"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/jmoiron/sqlx"
-	"google.golang.org/protobuf/types/known/wrapperspb"
-	"grpc/server/proto"
+	"grpc/server/app"
 )
 
 type Repository struct {
@@ -15,61 +13,59 @@ type Repository struct {
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{db: db}
 }
-func (r *Repository) AddBook(ctx context.Context, book *proto.Book) (*proto.BookID, error) {
+func (r *Repository) AddBook(ctx context.Context, book *app.Book) (int32, error) {
 
-	var bookIdInt int32
+	var result int32
 
 	row := r.db.QueryRow("insert into library (name, author, year) values ($1, $2, $3) returning id",
 		book.Name, book.Author, book.Year)
 
-	if err := row.Scan(&bookIdInt); err != nil {
-		return nil, err
+	if err := row.Scan(result); err != nil {
+		return 0, err
 	}
 
-	var bookId = proto.BookID{Id: bookIdInt}
-
-	return &bookId, nil
+	return result, nil
 
 }
-func (r *Repository) GetBook(ctx context.Context, bookId *proto.BookID) (*proto.Book, error) {
+func (r *Repository) GetBook(ctx context.Context, book *app.Book) (*app.Book, error) {
 
-	var resultBook proto.Book
+	var result app.Book
 
-	err := r.db.Get(&resultBook, "select * from library where id = $1", bookId.Id)
+	err := r.db.Get(&result, "select * from library where id = $1", book.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &resultBook, nil
+	return &result, nil
 
 }
-func (r *Repository) UpdateBook(ctx context.Context, book *proto.Book) (*wrappers.StringValue, error) {
+func (r *Repository) UpdateBook(ctx context.Context, book *app.Book) (string, error) {
 
-	var response = wrappers.StringValue{Value: "OK"}
+	response := "OK"
 
 	_, err := r.db.Exec("update library set name = $1, author = $2, year = $3 where id = $4",
 		book.Name, book.Author, book.Year, book.Id)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &response, err
+	return response, err
 
 }
-func (r *Repository) DeleteBook(ctx context.Context, bookId *proto.BookID) (*wrappers.StringValue, error) {
+func (r *Repository) DeleteBook(ctx context.Context, book *app.Book) (string, error) {
 
-	var response = wrappers.StringValue{Value: "Book Deleted!"}
+	response := "Book Deleted!"
 
-	_, err := r.db.Exec("delete from library where id = $1", bookId.Id)
+	_, err := r.db.Exec("delete from library where id = $1", book.Id)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &response, nil
+	return response, nil
 }
-func (r *Repository) SearchBookByName(ctx context.Context, book *proto.BookName) (*proto.BookList, error) {
+func (r *Repository) SearchBookByName(ctx context.Context, book *app.Book) ([]*app.Book, error) {
 
-	var resultBookList proto.BookList
+	resultSlice := make([]*app.Book, 0, 10)
 
 	rows, err := r.db.Query("select * from library where name=$1", book.Name)
 	if err != nil {
@@ -80,21 +76,21 @@ func (r *Repository) SearchBookByName(ctx context.Context, book *proto.BookName)
 
 	for rows.Next() {
 
-		var book proto.Book
+		var result app.Book
 
-		err := rows.Scan(&book.Id, &book.Name, &book.Author, &book.Year)
+		err := rows.Scan(&result.Id, &result.Name, &result.Author, &result.Year)
 		if err != nil {
 			return nil, err
 		}
 
-		resultBookList.Books = append(resultBookList.Books, &book)
+		resultSlice = append(resultSlice, &result)
 	}
 
-	return &resultBookList, nil
+	return resultSlice, nil
 }
-func (r *Repository) GetAll(ctx context.Context, in *wrapperspb.StringValue) (*proto.BookList, error) {
+func (r *Repository) GetAll(ctx context.Context, in string) ([]*app.Book, error) {
 
-	var resultBookList proto.BookList
+	resultSlice := make([]*app.Book, 0, 10)
 
 	rows, err := r.db.Query("select * from library")
 	if err != nil {
@@ -105,15 +101,15 @@ func (r *Repository) GetAll(ctx context.Context, in *wrapperspb.StringValue) (*p
 
 	for rows.Next() {
 
-		var book proto.Book
+		var book app.Book
 
 		err := rows.Scan(&book.Id, &book.Name, &book.Author, &book.Year)
 		if err != nil {
 			return nil, err
 		}
 
-		resultBookList.Books = append(resultBookList.Books, &book)
+		resultSlice = append(resultSlice, &book)
 	}
 
-	return &resultBookList, nil
+	return resultSlice, nil
 }

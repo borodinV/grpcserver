@@ -1,25 +1,36 @@
 package main
 
 import (
+	"flag"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"grpc/server/api"
 	"grpc/server/proto"
 	"grpc/server/repo"
 	"log"
 	"net"
 )
 
+const (
+	configFlagName        = "cfg"
+	configFlagDescription = "path to configuration file in work dir"
+)
+
+var configuration = flag.String(configFlagName, "configs", configFlagDescription)
+
 func main() {
 
-	listener, err := net.Listen("tcp", "localhost:50051")
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-	defer listener.Close()
+	flag.Parse()
 
 	if err := initConfig(); err != nil {
 		log.Fatalf("Config initialization error: %v", err)
 	}
+
+	listener, err := net.Listen("tcp", viper.GetString("host")+":"+viper.GetString("port"))
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+	defer listener.Close()
 
 	db, err := repo.NewPostgresDB(repo.Config{
 		Port:     viper.GetString("db.port"),
@@ -35,7 +46,7 @@ func main() {
 	defer db.Close()
 
 	repository := repo.NewRepository(db)
-	server := NewServer(repository)
+	server := api.NewServer(repository)
 
 	grpcServer := grpc.NewServer()
 	proto.RegisterLibraryServer(grpcServer, server)
@@ -48,7 +59,7 @@ func main() {
 
 }
 func initConfig() error {
-	viper.AddConfigPath("configs")
+	viper.AddConfigPath(*configuration)
 	viper.SetConfigName("config")
 	return viper.ReadInConfig()
 }
