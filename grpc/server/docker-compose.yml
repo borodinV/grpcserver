@@ -12,7 +12,8 @@ services:
     ports:
       - 5432:5436
 
-  golang:
+  grpcapp:
+    restart: always
     image: grpc-service
     depends_on:
       - db
