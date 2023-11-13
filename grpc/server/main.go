@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"grpc/server/api"
+	"grpc/server/migrations"
 	"grpc/server/proto"
 	"grpc/server/repo"
 	"log"
@@ -32,7 +33,20 @@ func main() {
 	}
 	defer listener.Close()
 
+	err = migrations.Run("migrations", "up", repo.Config{
+		Host:     viper.GetString("db.host"),
+		Port:     viper.GetString("db.port"),
+		Username: viper.GetString("db.username"),
+		DBName:   viper.GetString("db.dbname"),
+		SSLMode:  viper.GetString("db.sslmode"),
+		Password: viper.GetString("db.password"),
+	})
+	if err != nil {
+		log.Fatalf("Migration error: %v", err)
+	}
+
 	db, err := repo.NewPostgresDB(repo.Config{
+		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
 		Username: viper.GetString("db.username"),
 		DBName:   viper.GetString("db.dbname"),

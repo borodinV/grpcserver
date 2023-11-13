@@ -20,7 +20,7 @@ func (r *Repository) AddBook(ctx context.Context, book *app.Book) (int32, error)
 	row := r.db.QueryRow("insert into library (name, author, year) values ($1, $2, $3) returning id",
 		book.Name, book.Author, book.Year)
 
-	if err := row.Scan(result); err != nil {
+	if err := row.Scan(&result); err != nil {
 		return 0, err
 	}
 
