@@ -13,6 +13,7 @@ services:
       - 5432:5432
 
   grpcapp:
+    build: ./
     restart: always
     image: grpc-service
     depends_on:
