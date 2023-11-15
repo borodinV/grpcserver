@@ -6,15 +6,23 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"grpc/server/app"
 	"grpc/server/proto"
-	"grpc/server/repo"
 )
+
+type Repo interface {
+	AddBook(ctx context.Context, book *app.Book) (int32, error)
+	GetBook(ctx context.Context, book *app.Book) (*app.Book, error)
+	UpdateBook(ctx context.Context, book *app.Book) (string, error)
+	DeleteBook(ctx context.Context, book *app.Book) (string, error)
+	SearchBookByName(ctx context.Context, book *app.Book) ([]*app.Book, error)
+	GetAll(ctx context.Context, in string) ([]*app.Book, error)
+}
 
 type Server struct {
 	proto.UnimplementedLibraryServer
-	repo *repo.Repository
+	repo Repo
 }
 
-func NewServer(repo *repo.Repository) *Server {
+func NewServer(repo Repo) *Server {
 	return &Server{repo: repo}
 }
 func (s *Server) AddBook(ctx context.Context, book *proto.Book) (*proto.BookID, error) {

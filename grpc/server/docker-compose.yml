@@ -15,7 +15,6 @@ services:
   grpcapp:
     build: ./
     restart: always
-    image: grpc-service
     depends_on:
       - db
     ports:

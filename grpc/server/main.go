@@ -45,22 +45,14 @@ func main() {
 		log.Fatalf("Migration error: %v", err)
 	}
 
-	db, err := repo.NewPostgresDB(repo.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
-		Password: viper.GetString("db.password"),
-	})
+	db, err := repo.InitPostgresDB()
 	if err != nil {
 		log.Fatalf("DB initialization error: %v", err)
 
 	}
 	defer db.Close()
 
-	repository := repo.NewRepository(db)
-	server := api.NewServer(repository)
+	server := api.NewServer(repo.NewRepository(db))
 
 	grpcServer := grpc.NewServer()
 	proto.RegisterLibraryServer(grpcServer, server)
