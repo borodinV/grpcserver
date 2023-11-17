@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = "/proto";
+
+service Library{
+  rpc AddBook(Book) returns(BookID);
+  rpc GetBook(BookID) returns(Book);
+  rpc GetAll(Empty) returns(BookList);
+  rpc UpdateBook(Book) returns (Empty);
+  rpc DeleteBook(BookID) returns (Empty);
+  rpc SearchBookByName(BookName) returns (BookList);
+}
+
+message Book {
+  int32 id = 1;
+  string name = 2;
+  string author = 3;
+  string year = 4;
+}
+message BookID {
+  int32 id = 1;
+}
+message BookName {
+  string name = 1;
+}
+message BookList {
+  repeated Book books = 1;
+}
+message Empty{}

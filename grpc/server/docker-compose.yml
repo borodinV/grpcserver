@@ -1,0 +1,21 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_USER: admin
+      POSTGRES_DB: admin
+    ports:
+      - 5432:5432
+
+  grpcapp:
+    build: ./
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 50051:50051
