@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 	"grpc/client/proto"
 	"log"
@@ -108,7 +107,7 @@ func main() {
 			}
 		case "All":
 
-			books, err := client.GetAll(ctx, &wrappers.StringValue{Value: ""})
+			books, err := client.GetAll(ctx, &proto.Empty{})
 			if err != nil {
 				log.Printf("Error on executing method: %v\n", err)
 			}
@@ -153,11 +152,10 @@ func main() {
 				fmt.Printf("Your new book: \nName: %s | Author: %s | Year: %s\n",
 					input.Name, input.Author, input.Year)
 
-				response, err := client.UpdateBook(ctx, &input)
+				_, err = client.UpdateBook(ctx, &input)
 				if err != nil {
 					log.Printf("Error on executing method: %v\n", err)
 				}
-				fmt.Println(response)
 				break
 
 			}
@@ -173,11 +171,11 @@ func main() {
 					continue
 				}
 
-				response, err := client.DeleteBook(ctx, &bookId)
+				_, err = client.DeleteBook(ctx, &bookId)
 				if err != nil {
 					log.Printf("Error on executing method: %v\n", err)
 				}
-				fmt.Println(response)
+
 				break
 
 			}

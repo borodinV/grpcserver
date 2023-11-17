@@ -5,6 +5,7 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose"
+	"github.com/spf13/viper"
 	"grpc/server/repo"
 )
 
@@ -31,4 +32,22 @@ func Run(dir string, command string, cfg repo.Config) error {
 	}
 
 	return db.Close()
+}
+func InitMigrations(dir string, command string) error {
+
+	cfg := repo.Config{
+		Host:     viper.GetString("db.host"),
+		Port:     viper.GetString("db.port"),
+		Username: viper.GetString("db.username"),
+		DBName:   viper.GetString("db.dbname"),
+		SSLMode:  viper.GetString("db.sslmode"),
+		Password: viper.GetString("db.password"),
+	}
+
+	err := Run(dir, command, cfg)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

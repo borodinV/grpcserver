@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"github.com/golang/protobuf/ptypes/wrappers"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	"grpc/server/app"
 	"grpc/server/proto"
 )
@@ -11,10 +9,10 @@ import (
 type Repo interface {
 	AddBook(ctx context.Context, book *app.Book) (int32, error)
 	GetBook(ctx context.Context, book *app.Book) (*app.Book, error)
-	UpdateBook(ctx context.Context, book *app.Book) (string, error)
-	DeleteBook(ctx context.Context, book *app.Book) (string, error)
-	SearchBookByName(ctx context.Context, book *app.Book) ([]*app.Book, error)
-	GetAll(ctx context.Context, in string) ([]*app.Book, error)
+	UpdateBook(ctx context.Context, book *app.Book) error
+	DeleteBook(ctx context.Context, book *app.Book) error
+	SearchBookByName(ctx context.Context, book *app.Book) ([]app.Book, error)
+	GetAll(ctx context.Context) ([]app.Book, error)
 }
 
 type Server struct {
@@ -57,7 +55,7 @@ func (s *Server) GetBook(ctx context.Context, bookId *proto.BookID) (*proto.Book
 		Year:   book.Year,
 	}, nil
 }
-func (s *Server) UpdateBook(ctx context.Context, book *proto.Book) (*wrappers.StringValue, error) {
+func (s *Server) UpdateBook(ctx context.Context, book *proto.Book) (*proto.Empty, error) {
 
 	var input = &app.Book{
 		Id:     book.Id,
@@ -66,23 +64,23 @@ func (s *Server) UpdateBook(ctx context.Context, book *proto.Book) (*wrappers.St
 		Year:   book.Year,
 	}
 
-	response, err := s.repo.UpdateBook(ctx, input)
+	err := s.repo.UpdateBook(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 
-	return &wrappers.StringValue{Value: response}, nil
+	return &proto.Empty{}, nil
 }
-func (s *Server) DeleteBook(ctx context.Context, bookId *proto.BookID) (*wrappers.StringValue, error) {
+func (s *Server) DeleteBook(ctx context.Context, bookId *proto.BookID) (*proto.Empty, error) {
 
 	var input = &app.Book{Id: bookId.Id}
 
-	response, err := s.repo.DeleteBook(ctx, input)
+	err := s.repo.DeleteBook(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 
-	return &wrappers.StringValue{Value: response}, nil
+	return &proto.Empty{}, nil
 }
 func (s *Server) SearchBookByName(ctx context.Context, book *proto.BookName) (*proto.BookList, error) {
 
@@ -109,9 +107,9 @@ func (s *Server) SearchBookByName(ctx context.Context, book *proto.BookName) (*p
 
 	return &proto.BookList{Books: resultSlice}, nil
 }
-func (s *Server) GetAll(ctx context.Context, in *wrapperspb.StringValue) (*proto.BookList, error) {
+func (s *Server) GetAll(ctx context.Context, in *proto.Empty) (*proto.BookList, error) {
 
-	books, err := s.repo.GetAll(ctx, "")
+	books, err := s.repo.GetAll(ctx)
 	if err != nil {
 		return nil, err
 	}

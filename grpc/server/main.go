@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -19,6 +20,17 @@ const (
 
 var configuration = flag.String(configFlagName, "configs", configFlagDescription)
 
+func initConfig() error {
+	viper.AddConfigPath(*configuration)
+	viper.SetConfigName("config2")
+	return viper.ReadInConfig()
+}
+
+func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	log.Println("----> unary interceptor", info.FullMethod)
+	return handler(ctx, req)
+}
+
 func main() {
 
 	flag.Parse()
@@ -33,14 +45,7 @@ func main() {
 	}
 	defer listener.Close()
 
-	err = migrations.Run("migrations", "up", repo.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
-		Password: viper.GetString("db.password"),
-	})
+	err = migrations.InitMigrations("migrations", "up")
 	if err != nil {
 		log.Fatalf("Migration error: %v", err)
 	}
@@ -54,7 +59,8 @@ func main() {
 
 	server := api.NewServer(repo.NewRepository(db))
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(unaryInterceptor))
 	proto.RegisterLibraryServer(grpcServer, server)
 
 	log.Printf("Starting grpc listener on port: " + viper.GetString("port"))
@@ -63,9 +69,4 @@ func main() {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 
-}
-func initConfig() error {
-	viper.AddConfigPath(*configuration)
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
 }

@@ -1,15 +1,13 @@
 syntax = "proto3";
 
-import "google/protobuf/wrappers.proto";
-
 option go_package = "/proto";
 
 service Library{
   rpc AddBook(Book) returns(BookID);
   rpc GetBook(BookID) returns(Book);
-  rpc GetAll(google.protobuf.StringValue) returns(BookList);
-  rpc UpdateBook(Book) returns (google.protobuf.StringValue);
-  rpc DeleteBook(BookID) returns (google.protobuf.StringValue);
+  rpc GetAll(Empty) returns(BookList);
+  rpc UpdateBook(Book) returns (Empty);
+  rpc DeleteBook(BookID) returns (Empty);
   rpc SearchBookByName(BookName) returns (BookList);
 }
 
@@ -28,3 +26,4 @@ message BookName {
 message BookList {
   repeated Book books = 1;
 }
+message Empty{}

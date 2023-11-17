@@ -68,7 +68,7 @@ func (r *PostgresDB) GetBook(ctx context.Context, book *app.Book) (*app.Book, er
 
 	var result app.Book
 
-	err := r.db.Get(&result, "select * from library where id = $1", book.Id)
+	err := r.db.Get(&result, "select id, name, author, year from library where id = $1", book.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -76,35 +76,31 @@ func (r *PostgresDB) GetBook(ctx context.Context, book *app.Book) (*app.Book, er
 	return &result, nil
 
 }
-func (r *PostgresDB) UpdateBook(ctx context.Context, book *app.Book) (string, error) {
-
-	response := "OK"
+func (r *PostgresDB) UpdateBook(ctx context.Context, book *app.Book) error {
 
 	_, err := r.db.Exec("update library set name = $1, author = $2, year = $3 where id = $4",
 		book.Name, book.Author, book.Year, book.Id)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return response, err
+	return err
 
 }
-func (r *PostgresDB) DeleteBook(ctx context.Context, book *app.Book) (string, error) {
-
-	response := "Book Deleted!"
+func (r *PostgresDB) DeleteBook(ctx context.Context, book *app.Book) error {
 
 	_, err := r.db.Exec("delete from library where id = $1", book.Id)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return response, nil
+	return nil
 }
-func (r *PostgresDB) SearchBookByName(ctx context.Context, book *app.Book) ([]*app.Book, error) {
+func (r *PostgresDB) SearchBookByName(ctx context.Context, book *app.Book) ([]app.Book, error) {
 
-	resultSlice := make([]*app.Book, 0, 10)
+	resultSlice := make([]app.Book, 0, 10)
 
-	rows, err := r.db.Query("select * from library where name=$1", book.Name)
+	rows, err := r.db.Query("select id, name, author, year from library where name=$1", book.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -120,16 +116,16 @@ func (r *PostgresDB) SearchBookByName(ctx context.Context, book *app.Book) ([]*a
 			return nil, err
 		}
 
-		resultSlice = append(resultSlice, &result)
+		resultSlice = append(resultSlice, result)
 	}
 
 	return resultSlice, nil
 }
-func (r *PostgresDB) GetAll(ctx context.Context, in string) ([]*app.Book, error) {
+func (r *PostgresDB) GetAll(ctx context.Context) ([]app.Book, error) {
 
-	resultSlice := make([]*app.Book, 0, 10)
+	resultSlice := make([]app.Book, 0, 10)
 
-	rows, err := r.db.Query("select * from library")
+	rows, err := r.db.Query("select id, name, author, year from library")
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +141,7 @@ func (r *PostgresDB) GetAll(ctx context.Context, in string) ([]*app.Book, error)
 			return nil, err
 		}
 
-		resultSlice = append(resultSlice, &book)
+		resultSlice = append(resultSlice, book)
 	}
 
 	return resultSlice, nil
