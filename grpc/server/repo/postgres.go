@@ -7,6 +7,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 	"grpc/server/app"
+	"time"
 )
 
 type Config struct {
@@ -78,8 +79,10 @@ func (r *PostgresDB) GetBook(ctx context.Context, book *app.Book) (*app.Book, er
 }
 func (r *PostgresDB) UpdateBook(ctx context.Context, book *app.Book) error {
 
-	_, err := r.db.Exec("update library set name = $1, author = $2, year = $3 where id = $4",
-		book.Name, book.Author, book.Year, book.Id)
+	t := time.Now()
+
+	_, err := r.db.Exec("update library set name = $1, author = $2, year = $3, updated_at = $4 where id = $5",
+		book.Name, book.Author, book.Year, t, book.Id)
 	if err != nil {
 		return err
 	}

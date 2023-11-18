@@ -14,11 +14,14 @@ import (
 )
 
 const (
-	configFlagName        = "cfg"
-	configFlagDescription = "path to configuration file in work dir"
+	configFlagName           = "cfg"
+	configFlagDescription    = "path to configuration file in work dir"
+	migrationFlagName        = "mgt"
+	migrationFlagDescription = "path to migration files"
 )
 
 var configuration = flag.String(configFlagName, "configs", configFlagDescription)
+var migration = flag.String(migrationFlagName, "migrations", migrationFlagDescription)
 
 func initConfig() error {
 	viper.AddConfigPath(*configuration)
@@ -27,8 +30,14 @@ func initConfig() error {
 }
 
 func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+
 	log.Println("----> unary interceptor", info.FullMethod)
-	return handler(ctx, req)
+
+	res, err := handler(ctx, req)
+	if err != nil {
+		log.Println("----> intercepted error: ", err)
+	}
+	return res, err
 }
 
 func main() {
@@ -45,7 +54,7 @@ func main() {
 	}
 	defer listener.Close()
 
-	err = migrations.InitMigrations("migrations", "up")
+	err = migrations.InitMigrations(*migration, "up")
 	if err != nil {
 		log.Fatalf("Migration error: %v", err)
 	}
